@@ -147,7 +147,7 @@ if(!($data =~ /library:name="AnyToPDF"/)) {
 
 # now perform the conversion
 #  ... 1st add dirname if not present.
-if(!($infile =~ /\//)) { $infile = getcwd() . '/' . $infile; }
+if(!($infile =~ /^\//)) { $infile = getcwd() . '/' . $infile; }
 $cmd = "$OPENOFFICE_BINARY -headless -invisible -norestore " . "\"macro:///Standard.AnyToPDF.ConvertAnyToPDF(" . $infile . "," . $outfile . ")\"";
 `$cmd`;
 # unsure why this doesn't work, fails silently.
