@@ -140,7 +140,7 @@ else {
 
 # finally, check that our script file is registered
 $data = `cat '$MACRO_DIR/script.xlb'`;
-print ("$data");
+
 if(!($data =~ /library:name="AnyToPDF"/)) {
  warning("Extending user's openoffice.org scripts registry with AnyToPDF macro module.");
  $data =~ s/<\/library:library>.*?$//msg;
