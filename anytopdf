@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# anytopdf : convert any openoffice.org readable document to a PDF file using the current user's macro library (license: LGPL)
+# anytopdf : convert any openoffice.org/libreoffice readable document to a PDF file using the current user's macro library (license: LGPL)
 # 
 # http://code.google.com/p/anytopdf
 #
@@ -12,7 +12,8 @@
 #   - auto creates or extends the current user's Standard/AnyToPDF.xba macro libary
 #
 #  requirements:
-#   - openoffice.org 3+ (with macro support, and support for the file format you want to use)
+#   - openoffice.org 3+ or libreoffice (with macro support, and support for the file format you want to use)
+#   
 #   - standard perl install
 #   - unix style system
 #  
@@ -29,19 +30,26 @@
 # requirements
 use Cwd;
 use File::Basename; # present in default perl distribution - should be present on every machine
+use File::Find;
+
+
 
 # basic configuration and initialisation (you probably won't need to change this)
-$VERSION = '1.0';
-$OPENOFFICE_BINARY_NAME = 'soffice.bin';
+$VERSION = '1.1';
+
+$OPENOFFICE_BINARY_NAME = 'soffice';
+$LIBREOFFICE_BINARY_NAME = 'libreoffice';
+
+
 $HOME = $ENV{'HOME'};
-$MACRO_FILE = $HOME . '/.openoffice.org/3/user/basic/Standard/AnyToPDF.xba';
-if(! -e $MACRO_FILE) {
- $MACRO_FILE = $HOME . '/.ooo3/user/basic/Standard/AnyToPDF.xba';
- if(! -e $MACRO_FILE) {
-  print "ERROR: Unable to locate macro file.\n";
-  exit(1);
- }
-}
+# DRST is a list of possible locations for the "x"office config files
+@DIRST = <$HOME/{\.openo*,\.??*/\.openo*,\.ooo3*,.??*/\.libreo*,\.libreo}>;
+#CONFIGARRAY will contain script.xlb location with the latest modificaiton date
+@CONFIGARRAY = ("", 0);
+#Searches through DIRST directories after script.xlb 
+find(\&wanted, @DIRST );
+#replacing script.xlb with AnyToPDF.xba
+$MACRO_FILE = dirname($CONFIGARRAY[0]) . '/AnyToPDF.xba';
 
 # macro definitions
 $MACRO_HEADER = '<?xml version="1.0" encoding="UTF-8"?>
@@ -67,13 +75,16 @@ Function AnyToPDFMPV( Optional cName As String, Optional uValue ) As com.sun.sta
 End Function' . "\n";
 $MACRO_FOOTER = '</script:module>';
 
-# check that the openoffice program is in the path
+# check that the xoffice program is in the path
 $OPENOFFICE_BINARY = `which $OPENOFFICE_BINARY_NAME 2>/dev/null`;
 if(length($OPENOFFICE_BINARY)<=2) {
- $OPENOFFICE_BINARY = `locate soffice.bin 2>/dev/null |grep '^/usr/' |head -n 1`;
- if(length($OPENOFFICE_BINARY)<=2) {
-  $path = $ENV{'PATH'}; error("Could not find openoffice.org binary '$OPENOFFICE_BINARY_NAME' in PATH ($path) or via slocate.",100);
- }
+    $OPENOFFICE_BINARY = `which $LIBREOFFICE_BINARY_NAME 2>/dev/null`;
+    if (length($OPENOFFICE_BINARY)<=2) {
+	$OPENOFFICE_BINARY = `locate soffice.bin 2>/dev/null |grep '^/usr/' |head -n 1`;
+	if(length($OPENOFFICE_BINARY)<=2) {
+	    $path = $ENV{'PATH'}; error("Could not find openoffice.org or libreoffice binary '$OPENOFFICE_BINARY_NAME' in PATH ($path) or via slocate.",100);
+	}
+    }
 }
 chop($OPENOFFICE_BINARY);
 # check that we can execute it
@@ -135,6 +146,7 @@ else {
 
 # finally, check that our script file is registered
 $data = `cat '$MACRO_DIR/script.xlb'`;
+
 if(!($data =~ /library:name="AnyToPDF"/)) {
  warning("Extending user's openoffice.org scripts registry with AnyToPDF macro module.");
  $data =~ s/<\/library:library>.*?$//msg;
@@ -180,3 +192,12 @@ sub warning {
  print STDERR "WARNING: " . shift(@_) . "\n";
 }
 
+sub wanted {
+    if (/^script.xlb\z/s)
+    {
+	if ((stat $File::Find::name)[9] > $CONFIGARRAY[1])
+	{
+	    @CONFIGARRAY = ("$File::Find::name", (stat $File::Find::name)[9]) ;
+	}
+    }
+ }
