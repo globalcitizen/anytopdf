@@ -31,6 +31,7 @@
 use Cwd;
 use File::Basename; # present in default perl distribution - should be present on every machine
 use File::Find;
+use File::Spec;
 
 
 
@@ -106,10 +107,10 @@ $outfile = $ARGV[1];
 if($outfile eq '' || $outfile eq '-h' || $outfile eq '--help' || $outfile eq '/?') { usage(); }
 if($outfile eq '') { error("Must supply output file name!",95); }
 if($outfile =~ /[,\(\)'"\r\n]/) { error("Outfile file name ($outfile) cannot include comma, brackets, new lines or quotes.",94); }
-$outdir = dirname($outfile);
 # prepends output directory to file should it be relative vs absolute (x.pdf vs. /some/place/x.pdf) - macro needs absolute
-if($outdir eq '.') { $outdir = getcwd(); }
-$outfile = $outdir . '/' . basename($outfile);
+$outfile = File::Spec->rel2abs($outfile);
+$outdir = dirname($outfile);
+
 if(!(-e $outdir)) { error("Output directory '$outdir' does not exist!",96); }
 else {
  if(!(-w $outdir)) { error("Output directory '$outdir' exists but is not writable!",97); }
