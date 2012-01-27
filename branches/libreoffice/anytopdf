@@ -76,9 +76,11 @@ End Function' . "\n";
 $MACRO_FOOTER = '</script:module>';
 
 # check that the xoffice program is in the path
-$OPENOFFICE_BINARY = `which $OPENOFFICE_BINARY_NAME 2>/dev/null`;
+$OPENOFFICE_BINARY = `which $LIBREOFFICE_BINARY_NAME 2>/dev/null`;
+$OOPARAMS = "--headless --invisible --norestore";
 if(length($OPENOFFICE_BINARY)<=2) {
-    $OPENOFFICE_BINARY = `which $LIBREOFFICE_BINARY_NAME 2>/dev/null`;
+    $OPENOFFICE_BINARY = `which $OPENOFFICE_BINARY_NAME 2>/dev/null`;
+    $OOPARAMS = "-headless -invisible -norestore";
     if (length($OPENOFFICE_BINARY)<=2) {
 	$OPENOFFICE_BINARY = `locate soffice.bin 2>/dev/null |grep '^/usr/' |head -n 1`;
 	if(length($OPENOFFICE_BINARY)<=2) {
@@ -86,6 +88,7 @@ if(length($OPENOFFICE_BINARY)<=2) {
 	}
     }
 }
+#print "This is the params: $OOPARAMS \n This is the binary: $OPENOFFICE_BINARY\n";
 chop($OPENOFFICE_BINARY);
 # check that we can execute it
 if(!-x $OPENOFFICE_BINARY) { error("openoffice.org binary '$OPENOFFICE_BINARY_NAME' found in PATH at '$OPENOFFICE_BINARY', but cannot be executed!",101); }
@@ -160,7 +163,7 @@ if(!($data =~ /library:name="AnyToPDF"/)) {
 # now perform the conversion
 #  ... 1st add dirname if not present.
 if(!($infile =~ /^\//)) { $infile = getcwd() . '/' . $infile; }
-$cmd = "$OPENOFFICE_BINARY -headless -invisible -norestore " . "\"macro:///Standard.AnyToPDF.ConvertAnyToPDF(" . $infile . "," . $outfile . ")\"";
+$cmd = "$OPENOFFICE_BINARY $OOPARAMS " . "\"macro:///Standard.AnyToPDF.ConvertAnyToPDF(" . $infile . "," . $outfile . ")\"";
 `$cmd`;
 # unsure why this doesn't work, fails silently.
 #@args = ($OPENOFFICE_BINARY,'-headless','-invisible','-norestore','"macro:///Standard.AnyToPDF.ConvertAnyToPDF('.$infile.','.$outfile.')"');
