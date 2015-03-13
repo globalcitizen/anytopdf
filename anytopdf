@@ -2,7 +2,11 @@
 #
 # anytopdf : convert any openoffice.org readable document to a PDF file using the current user's macro library (license: LGPL)
 # 
-# http://code.google.com/p/anytopdf
+# please note that this code has not been touched for 5+ years and probably
+# does not work against current versions of openoffice.org. in addition, it
+# comes with caveats on speed, security, etc. however, it is left available
+# here for historic interest after migration from code.google.com (dead) to
+# https://github.com/globalcitizen/anytopdf
 #
 #  known issues (MAJOR - READ THIS!):
 #   - does not support attempts to use file names with commas, quotes, brackets, or newlines
